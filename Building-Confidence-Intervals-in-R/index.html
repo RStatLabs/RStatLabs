@@ -1,1 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RStatLabs: Confidence Intervals in R</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #121212;
+      color: #e0e0e0;
+      line-height: 1.7;
+    }
+    header {
+      background-color: #1f1f1f;
+      color: #ffffff;
+      padding: 20px 40px;
+      border-bottom: 3px solid #4caf50;
+      text-align: left;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .container {
+      padding: 40px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h2 {
+      color: #90ee90;
+      margin-top: 40px;
+    }
+    pre {
+      background-color: #1e1e1e;
+      color: #dcdcdc;
+      border-left: 4px solid #4caf50;
+      padding: 16px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    code {
+      background-color: #2a2a2a;
+      color: #ffffff;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    .note {
+      background-color: #2c2c2c;
+      border-left: 4px solid #ff9800;
+      padding: 12px;
+      margin: 20px 0;
+      font-style: italic;
+    }
+    footer {
+      background-color: #1f1f1f;
+      text-align: center;
+      padding: 20px;
+      font-size: 0.9em;
+      color: #888;
+      margin-top: 60px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>RStatLabs: Building Confidence Intervals in R</h1>
+  </header>
+
+  <div class="container">
+    <p>Welcome to <strong>RStatLabs</strong>, your practical guide to statistical programming in R. In this walkthrough, we focus on confidence intervals—a foundational concept in inferential statistics—and demonstrate how to write generalized, reusable R code for constructing confidence intervals using the t-distribution.</p>
+
+    <h2>1. What Is a Confidence Interval?</h2>
+    <p>A confidence interval is a range of plausible values for a population parameter. It reflects sampling uncertainty and is often used to estimate population means, proportions, or differences. In this guide, we focus on estimating the population mean, assuming the population standard deviation is unknown.</p>
+
+    <h2>2. Requirements and Context</h2>
+    <ul>
+      <li>A vector of numeric data (your sample)</li>
+      <li>An approximately normal population or a large sample size</li>
+      <li>Use of the t-distribution due to unknown population standard deviation</li>
+    </ul>
+
+    <h2>3. Writing a Generalized Function</h2>
+    <p>Here’s the R code to compute a t-distribution confidence interval. The function takes in a numeric sample and a significance level <code>alpha</code> and returns the lower and upper bounds of the interval.</p>
+
+    <pre><code>conf.int = function(sample, alpha) {
+  n = length(sample)
+  x_bar = mean(sample, na.rm = TRUE)
+  s = sd(sample, na.rm = TRUE)
+  t_crit = qt(1 - alpha / 2, df = n - 1)
+
+  margin.error = t_crit * s / sqrt(n)
+  
+  lower.bound = x_bar - margin.error
+  upper.bound = x_bar + margin.error
+
+  return(c(lower.bound = lower.bound, upper.bound = upper.bound))
+}</code></pre>
+
+    <h2>4. Testing the Function</h2>
+    <p>Let’s create a sample and test the confidence interval function:</p>
+    <pre><code>set.seed(111)
+sample_data = rnorm(30, mean = 100, sd = 15)
+
+conf.int(sample_data, alpha = 0.05)</code></pre>
+
+    <h2>5. How It Works</h2>
+    <p>This function calculates:</p>
+    <ul>
+      <li>Sample size <code>n</code></li>
+      <li>Sample mean <code>x̄</code></li>
+      <li>Sample standard deviation <code>s</code></li>
+      <li>Critical t-value based on degrees of freedom</li>
+      <li>Margin of error: <code>t * (s / sqrt(n))</code></li>
+      <li>Confidence interval: <code>x̄ ± margin of error</code></li>
+    </ul>
+
+    <h2>6. Output Example</h2>
+    <pre><code>lower.bound upper.bound
+   94.68231  107.75058</code></pre>
+
+    <h2>7. When to Use This Method</h2>
+    <ul>
+      <li>When population standard deviation is unknown</li>
+      <li>When the population distribution is approximately normal or the sample size is large</li>
+    </ul>
+
+    <h2>8. Alternate Use Cases</h2>
+    <ul>
+      <li>Adapt for one-sided confidence intervals</li>
+      <li>Modify for estimating population proportions (with binomial assumptions)</li>
+      <li>Extend to paired or unpaired t-tests using similar logic</li>
+    </ul>
+
+    <h2>9. Visualizing the Interval</h2>
+    <p>Confidence intervals can be plotted using <code>ggplot2</code> to help visualize uncertainty:</p>
+    <pre><code>library(ggplot2)
+
+df <- data.frame(
+  group = "Sample",
+  mean = mean(sample_data),
+  lower = conf.int(sample_data, 0.05)[1],
+  upper = conf.int(sample_data, 0.05)[2]
+)
+
+ggplot(df, aes(x = group, y = mean)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  theme_minimal() +
+  labs(title = "95% Confidence Interval", y = "Mean")</code></pre>
+
+    <h2>10. Key Takeaways</h2>
+    <ul>
+      <li>Confidence intervals are crucial for expressing uncertainty in estimates.</li>
+      <li>The t-distribution is used when the population standard deviation is unknown.</li>
+      <li>Always check assumptions (normality, independence, sample size).</li>
+      <li>Functions like this are a gateway to broader statistical modeling in R.</li>
+    </ul>
+
+    <div class="note">
+      This walkthrough is built for teaching and can be adapted for real-world analysis and presentations. Package it into a reusable script or integrate it with reporting tools like R Markdown or Shiny.
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2022 RStatLabs | A resource for practical R coding and data science insights.
+  </footer>
+</body>
+</html>
 
